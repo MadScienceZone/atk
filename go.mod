@@ -1,4 +1,4 @@
-module github.com/fizban-of-ragnarok/atk
+module github.com/MadScienceZone/atk
 
 go 1.14
 

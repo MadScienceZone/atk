@@ -412,6 +412,12 @@ func (w *Text) AppendText(text string) error {
 	return eval(fmt.Sprintf("%v insert end $atk_text_insert", w.id))
 }
 
+func (w *Text) AppendTextWithTag(text, tag string) error {
+	setObjText("atk_text_tag", tag)
+	setObjText("atk_text_insert", text)
+	return eval(fmt.Sprintf("%v insert end $atk_text_insert $atk_text_tag", w.id))
+}
+
 func (w *Text) Length() int {
 	r, _ := evalAsInt(fmt.Sprintf("%v index end", w.id))
 	return r
@@ -428,6 +434,22 @@ func (w *Text) SetText(text string) error {
 
 func (w *Text) SetTabSize(size int) error {
 	return eval(fmt.Sprintf("%v configure -tabs %v", w.id, size))
+}
+
+func (w *Text) SetTabWordProcessorStyle(wpstyle bool) error {
+	if wpstyle {
+		return eval(fmt.Sprintf("%v configure -tabstyle wordprocessor", w.id))
+	}
+	return eval(fmt.Sprintf("%v configure -tabstyle tabular", w.id))
+}
+
+func (w *Text) DefineTagHACK(tag string, attrs map[string]string) error {
+	var c strings.Builder
+	c.Write([]byte(fmt.Sprintf("%v tag configure {%v}", w.id, tag)))
+	for k, v := range attrs {
+		c.Write([]byte(fmt.Sprintf(" -%v {%v}", k, v)))
+	}
+	return eval(c.String())
 }
 
 func (w *Text) SetXViewArgs(args []string) error {
