@@ -5,6 +5,8 @@ package tk
 import (
 	"fmt"
 	"strings"
+
+	"github.com/MadScienceZone/go-gma/v4/tcllist"
 )
 
 // Create and manipulate 'text' hypertext editing widgets
@@ -443,6 +445,257 @@ func (w *Text) SetTabWordProcessorStyle(wpstyle bool) error {
 	return eval(fmt.Sprintf("%v configure -tabstyle tabular", w.id))
 }
 
+type textTagAttrSet []interface{}
+type TextTagAttr func(*textTagAttrSet) error
+
+func TextTagAttrBackground(color string) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		*a = append(*a, "-background", color)
+		return nil
+	}
+}
+
+// TODO: TextTagAttrBgStipple
+// TODO: TextTagAttrFgStipple
+
+func TextTagAttrBorderWidth(pixels int) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		*a = append(*a, "-borderwidth", pixels)
+		return nil
+	}
+}
+
+func TextTagAttrElide(flag bool) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		*a = append(*a, "-elide", flag)
+		return nil
+	}
+}
+
+func TextTagAttrFont(font Font) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		if font == nil {
+			return ErrInvalid
+		}
+		*a = append(*a, "-font", font.Id())
+		return nil
+	}
+}
+
+func TextTagAttrForeground(color string) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		*a = append(*a, "-foreground", color)
+		return nil
+	}
+}
+
+func TextTagAttrJustify(j Justify) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		*a = append(*a, "-justify")
+		switch j {
+		case JustifyCenter:
+			*a = append(*a, "center")
+		case JustifyLeft:
+			*a = append(*a, "left")
+		case JustifyRight:
+			*a = append(*a, "right")
+		default:
+			return fmt.Errorf("invalid text tag justification mode: %v", j)
+		}
+		return nil
+	}
+}
+
+func TextTagAttrLeftMarginFirstIndent(pixels int) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		*a = append(*a, "-lmargin1", pixels)
+		return nil
+	}
+}
+
+func TextTagAttrLeftMarginNextIndent(pixels int) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		*a = append(*a, "-lmargin2", pixels)
+		return nil
+	}
+}
+
+func TextTagAttrLeftMarginColor(color string) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		*a = append(*a, "-lmargincolor", color)
+		return nil
+	}
+}
+
+func TextTagAttrBaselineOffset(pixels int) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		*a = append(*a, "-offset", pixels)
+		return nil
+	}
+}
+
+func TextTagAttrOverstrike(enabled bool) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		*a = append(*a, "-overstrike", enabled)
+		return nil
+	}
+}
+
+func TextTagAttrOverstrikeFg(color string) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		*a = append(*a, "-overstrikefg", color)
+		return nil
+	}
+}
+
+func TextTagAttrRelief(r ReliefStyle) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		*a = append(*a, "-relief")
+		switch r {
+		case ReliefStyleFlat:
+			*a = append(*a, "flat")
+		case ReliefStyleGroove:
+			*a = append(*a, "groove")
+		case ReliefStyleRaised:
+			*a = append(*a, "raised")
+		case ReliefStyleRidge:
+			*a = append(*a, "ridge")
+		case ReliefStyleSolid:
+			*a = append(*a, "solid")
+		case ReliefStyleSunken:
+			*a = append(*a, "sunken")
+		default:
+			return fmt.Errorf("invalid relief style: %v", r)
+		}
+		return nil
+	}
+}
+
+func TextTagAttrRightMargin(pixels int) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		*a = append(*a, "-rmargin", pixels)
+		return nil
+	}
+}
+
+func TextTagAttrRightMarginColor(color string) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		*a = append(*a, "-rmargincolor", color)
+		return nil
+	}
+}
+
+func TextTagAttrSelectBackground(color string) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		*a = append(*a, "-selectbackground", color)
+		return nil
+	}
+}
+
+func TextTagAttrSelectForeground(color string) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		*a = append(*a, "-selectforeground", color)
+		return nil
+	}
+}
+
+func TextTagAttrSpacingAbove(pixels int) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		*a = append(*a, "-spacing1", pixels)
+		return nil
+	}
+}
+
+func TextTagAttrSpacingBetween(pixels int) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		*a = append(*a, "-spacing2", pixels)
+		return nil
+	}
+}
+
+func TextTagAttrSpacingBelow(pixels int) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		*a = append(*a, "-spacing3", pixels)
+		return nil
+	}
+}
+
+func TextTagAttrTabs(tabstops ...string) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		*a = append(*a, "-tabs", tabstops)
+		return nil
+	}
+}
+
+type TextTagTabStyle int
+
+const (
+	TextTagTabStyleTabular TextTagTabStyle = iota
+	TextTagTabStyleWordProcessor
+)
+
+func TextTagAttrTabStyle(st TextTagTabStyle) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		switch st {
+		case TextTagTabStyleTabular:
+			*a = append(*a, "-tabstyle", "tabular")
+		case TextTagTabStyleWordProcessor:
+			*a = append(*a, "-tabstyle", "wordprocessor")
+		default:
+			return fmt.Errorf("invalid tab style %v", st)
+		}
+		return nil
+	}
+}
+
+func TextTagAttrUnderline(enabled bool) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		*a = append(*a, "-underline", enabled)
+		return nil
+	}
+}
+
+func TextTagAttrUnderlineFg(color string) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		*a = append(*a, "-underlinefg", color)
+		return nil
+	}
+}
+
+func TextTagAttrWrapMode(mode LineWrapMode) TextTagAttr {
+	return func(a *textTagAttrSet) error {
+		*a = append(*a, "-wrap")
+		switch mode {
+		case LineWrapNone:
+			*a = append(*a, "none")
+		case LineWrapChar:
+			*a = append(*a, "char")
+		case LineWrapWord:
+			*a = append(*a, "word")
+		default:
+			return fmt.Errorf("invalid wrap mode %v", mode)
+		}
+		return nil
+	}
+}
+
+func (w *Text) TagConfigure(tag string, optFuncs ...TextTagAttr) error {
+	var attrs textTagAttrSet
+	attrs = append(attrs, tag)
+
+	for _, f := range optFuncs {
+		if err := f(&attrs); err != nil {
+			return err
+		}
+	}
+	tclString, err := tcllist.ToDeepTclString(attrs...)
+	if err != nil {
+		return err
+	}
+	return eval(fmt.Sprintf("%v tag configure %s", w.id, tclString))
+}
+
+/*
 func (w *Text) DefineTagHACK(tag string, attrs map[string]string) error {
 	var c strings.Builder
 	c.Write([]byte(fmt.Sprintf("%v tag configure {%v}", w.id, tag)))
@@ -451,6 +704,7 @@ func (w *Text) DefineTagHACK(tag string, attrs map[string]string) error {
 	}
 	return eval(c.String())
 }
+*/
 
 func (w *Text) SetXViewArgs(args []string) error {
 	return eval(fmt.Sprintf("%v xview %v", w.id, strings.Join(args, " ")))
