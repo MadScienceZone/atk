@@ -1,6 +1,6 @@
 module github.com/MadScienceZone/atk
 
-go 1.14
+go 1.18
 
 require (
 	github.com/visualfc/atk v1.2.2
