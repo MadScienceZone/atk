@@ -439,7 +439,7 @@ func (w *Text) SetTabSize(size int) error {
 }
 
 func (w *Text) SetTabStops(tabstops ...string) error {
-	return applyTclEval(w.id, "configure -tabs", tabstops)
+	return applyTclEval(w.id, "configure -tabs", true, tabstops)
 }
 
 func (w *Text) SetTabWordProcessorStyle(wpstyle bool) error {
@@ -692,15 +692,19 @@ func (w *Text) TagConfigure(tag string, optFuncs ...TextTagAttr) error {
 			return err
 		}
 	}
-	return applyTclEval(w.id, "tag configure", attrs)
+	return applyTclEval(w.id, "tag configure", false, attrs)
 }
 
-func applyTclEval(cmd, subcmd string, args ...any) error {
+func applyTclEval(cmd, subcmd string, asOneList bool, args ...any) error {
 	tclString, err := tcllist.ToDeepTclString(args...)
 	if err != nil {
 		return err
 	}
-	return eval(fmt.Sprintf("%v %v {%s}", cmd, subcmd, tclString))
+	if asOneList {
+		return eval(fmt.Sprintf("%v %v {%s}", cmd, subcmd, tclString))
+	} else {
+		return eval(fmt.Sprintf("%v %v %s", cmd, subcmd, tcllist.StripLevel(tclString)))
+	}
 }
 
 /*
