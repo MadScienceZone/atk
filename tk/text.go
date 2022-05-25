@@ -700,11 +700,10 @@ func applyTclEval(cmd, subcmd string, asOneList bool, args ...any) error {
 	if err != nil {
 		return err
 	}
-	if asOneList {
-		return eval(fmt.Sprintf("%v %v {%s}", cmd, subcmd, tclString))
-	} else {
-		return eval(fmt.Sprintf("%v %v %s", cmd, subcmd, tcllist.StripLevel(tclString)))
+	if !asOneList {
+		tclString = tcllist.StripLevel(tclString)
 	}
+	return eval(fmt.Sprintf("%v %v %s", cmd, subcmd, tcllist.StripLevel(tclString)))
 }
 
 /*
